@@ -22,7 +22,16 @@ echo './v2ray&'>>start.sh
 echo 'sleep 9d'>>start.sh
 echo 'kill -9 $(ps -ef|grep v2ray|grep -v grep|awk "'"{print \$2}"'")'>>start.sh
 echo 'web: ./start.sh'>Procfile
-wget https://github.com/v2ray/v2ray-core/releases/latest/download/v2ray-linux-64.zip
+    TMP_FILE="$(mktemp)"
+    if ! curl -s -o "$TMP_FILE" 'https://api.github.com/repos/v2fly/v2ray-core/releases/latest'; then
+        rm "$TMP_FILE"
+        echo 'error: 获取最新V2Ray版本号失败。请重试'
+        exit 1
+    fi
+    RELEASE_LATEST="$(sed 'y/,/\n/' "$TMP_FILE" | grep 'tag_name' | awk -F '"' '{print $4}')"
+    rm "$TMP_FILE"
+    echo "当前最新V2Ray版本为$RELEASE_LATEST"
+wget https://github.com/v2fly/v2ray-core/releases/download/$RELEASE_LATEST/v2ray-linux-64.zip
 unzip -d v2ray v2ray-linux-64.zip
 cd v2ray
 chmod 777 *
